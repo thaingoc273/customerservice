@@ -3,6 +3,7 @@ package com.ecommerce.Customer.controller;
 import com.ecommerce.Customer.dto.UserCallExternalResponseDTO;
 import com.ecommerce.Customer.dto.UserCallExternalRequestDTO;
 import com.ecommerce.Customer.dto.UserDTO;
+import com.ecommerce.Customer.dto.UserCallFullResponse;
 import com.ecommerce.Customer.service.UserService;
 import com.ecommerce.Customer.util.UserDataCallExternalApiGenerator;
 import com.ecommerce.Customer.util.UserDataGenerator;
@@ -135,5 +136,15 @@ public class UserController {
         return userService.createUserReactiveAsList(currentUser, requests)
             .map(ResponseEntity::ok)
             .onErrorResume(e -> Mono.just(ResponseEntity.internalServerError().build()));
+    }
+
+    @PostMapping("/batch/reactive/new")
+    public Flux<UserCallFullResponse> createUserReactiveNew(
+        @RequestHeader("X-Current-User") String currentUser,
+        @RequestBody(required = false) List<UserCallExternalRequestDTO> userCallExternalRequestDTO) {
+        List<UserCallExternalRequestDTO> requests = userCallExternalRequestDTO != null ? 
+            userCallExternalRequestDTO : 
+            userDataCallExternalApiGenerator.generateUsers(20);
+        return userService.createUserReactiveNew(currentUser, requests);
     }
 } 

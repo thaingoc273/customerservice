@@ -15,7 +15,8 @@ import java.util.Set;
 public class UserCallExternalResponseDTO {
     // private String id;
     private String username;
-    private String messages;
+    private String status;
+    private String message;
     // private LocalDate birthday;
     // private String address;
     // private LocalDateTime createdAt;
