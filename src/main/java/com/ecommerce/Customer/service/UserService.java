@@ -4,6 +4,7 @@ import com.ecommerce.Customer.dto.UserCallExternalRequestDTO;
 import com.ecommerce.Customer.dto.UserCallExternalResponseDTO;
 import com.ecommerce.Customer.dto.UserDTO;
 import com.ecommerce.Customer.dto.UserCallFullResponse;
+import com.ecommerce.Customer.dto.FullUserResponseDTO;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -16,5 +17,5 @@ public interface UserService {
     Mono<List<UserCallExternalResponseDTO>> createUserReactiveAsList(String currentUser, List<UserCallExternalRequestDTO> userCallExternalRequestDTO);
     List<UserCallExternalResponseDTO> createUserAsync(String currentUser, List<UserCallExternalRequestDTO> userCallExternalRequestDTOS);
     Flux<UserCallFullResponse> createUserReactiveNew(String currentUser, List<UserCallExternalRequestDTO> userCallExternalRequestDTOS);
-    Flux<UserCallFullResponse> createUserReactiveTest(String currentUser, List<UserCallExternalRequestDTO> userCallExternalRequestDTOS);
+    Flux<FullUserResponseDTO> createUserReactiveTest(String currentUser, List<UserCallExternalRequestDTO> userCallExternalRequestDTOS);
 } 

@@ -1,6 +1,7 @@
 package com.ecommerce.Customer.controller;
 
 import com.ecommerce.Customer.dto.UserCallExternalResponseDTO;
+import com.ecommerce.Customer.dto.FullUserResponseDTO;
 import com.ecommerce.Customer.dto.UserCallExternalRequestDTO;
 import com.ecommerce.Customer.dto.UserDTO;
 import com.ecommerce.Customer.dto.UserCallFullResponse;
@@ -146,5 +147,15 @@ public class UserController {
             userCallExternalRequestDTO : 
             userDataCallExternalApiGenerator.generateUsers(20);
         return userService.createUserReactiveNew(currentUser, requests);
+    }
+
+    @PostMapping("/batch/reactive/test")
+    public Flux<FullUserResponseDTO> createUserReactiveTest(
+            @RequestHeader("X-Current-User") String currentUser,
+            @RequestBody(required = false) List<UserCallExternalRequestDTO> userCallExternalRequestDTO) {
+        List<UserCallExternalRequestDTO> requests = userCallExternalRequestDTO != null ? 
+            userCallExternalRequestDTO : 
+            userDataCallExternalApiGenerator.generateUsers(20);
+        return userService.createUserReactiveTest(currentUser, requests);
     }
 } 

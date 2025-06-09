@@ -1,5 +1,6 @@
 package com.ecommerce.Customer.service.impl;
 
+import com.ecommerce.Customer.dto.FullUserResponseDTO;
 import com.ecommerce.Customer.dto.UserCallExternalRequestDTO;
 import com.ecommerce.Customer.dto.UserCallExternalResponseDTO;
 import com.ecommerce.Customer.dto.UserCallFullResponse;
@@ -135,58 +136,78 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public Flux<UserCallFullResponse> createUserReactiveTest(String currentUser, List<UserCallExternalRequestDTO> userCallExternalRequestDTOS) {
+    public Flux<FullUserResponseDTO> createUserReactiveTest(String currentUser, List<UserCallExternalRequestDTO> userCallExternalRequestDTOS) {
         currentUserLogin = currentUser;
         baseUrl = "http://localhost:8082";
         uri = "/api/users/batch_async";
+
+        // Create the web client
+        webClient = createWebClient(baseUrl);
+
+        // Create the chunks for the request
+        List<List<UserCallExternalRequestDTO>> chunks = createChunks(userCallExternalRequestDTOS, 5);
+
+        // Send the chunks to the server
+      
+        Flux<FullUserResponseDTO> flux = Flux.fromIterable(chunks)
+                                                .flatMap(chunk -> Mono.<FullUserResponseDTO>defer(() -> sendChunkToServer(chunk))
+                                                .publishOn(Schedulers.parallel()));
+
+        // Return the flux
+        return flux;                                         
+    }
+
+    private Mono<Boolean> checkPermission(String currentUser) {
+        currentUserLogin = currentUser;
+        baseUrl = "http://localhost:8082";
+        uri = "/api/users/permission";
+
+        WebClient webClient = createWebClient(baseUrl);
+
+        return webClient.get()
+            .uri(uri + "/" + currentUserLogin)
+            .retrieve()
+            .bodyToMono(String.class)
+            .map(permission -> permission.contains("ADMIN"));
+    }
+
+    private WebClient createWebClient(String baseUrl) {
         // To configure a connection pool size
         ConnectionProvider provider = ConnectionProvider.builder("custom-connection-pool")
             .maxConnections(50)
             .pendingAcquireTimeout(Duration.ofSeconds(10))
             .pendingAcquireMaxCount(1000)
             .build();
-
+        
         // To configure a connection timeout
         HttpClient httpClient = HttpClient.create(provider).option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000);
-
-        // Create the chunks for the request
-        List<List<UserCallExternalRequestDTO>> chunks = createChunks(userCallExternalRequestDTOS, 5);
-
+        
         // Create the web client        
         webClient = WebClient.builder()
                                 .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(16 * 1024 * 1024))
                                 .clientConnector(new ReactorClientHttpConnector(httpClient))
                                 .baseUrl(baseUrl)                               
                                 .build();
-        
-        // Send the chunks to the server
-        Flux<UserCallFullResponse> flux = Flux.fromIterable(chunks)
-                                                .flatMap(chunk -> Mono.<UserCallFullResponse>defer(() -> sendChunkToServer(chunk))
-                                                .publishOn(Schedulers.parallel()));
-
-        // Return the flux
-        return flux;                                         
-
-        
-
+        return webClient;
     }
 
-    private Mono<UserCallFullResponse> sendChunkToServer(List<UserCallExternalRequestDTO> chunk) {
+    private Mono<FullUserResponseDTO> sendChunkToServer(List<UserCallExternalRequestDTO> chunk) {
         return webClient.post()
             .uri(uri)
             .contentType(MediaType.APPLICATION_JSON)
             .header("X-Current-User", currentUserLogin)
             .body(BodyInserters.fromValue(chunk))
-            // .retrieve()
-            // .onStatus(status -> status.is4xxClientError(), 
-            //     response -> response.bodyToMono(String.class)
-            //         .flatMap(body -> Mono.error(new RuntimeException("Bad request: " + body))))
-            // .bodyToMono(UserCallFullResponse.class)
-            .exchangeToMono(response -> response.bodyToMono(UserCallFullResponse.class))
+            .exchangeToMono(response -> {
+                log.info("Thread [{}] - Response status code: {}", 
+                    Thread.currentThread().getName(), response.statusCode());
+                return response.bodyToMono(UserCallFullResponse.class)
+                    .map(body -> new FullUserResponseDTO(HttpStatus.valueOf(response.statusCode().value()), body));
+            })
             .onErrorResume(WebClientResponseException.class, ex -> {
-                // log.error("WebClient error: {}", ex.getMessage());
+                log.error("WebClient error: {}", ex.getMessage());
                 return Mono.error(new RuntimeException("Error processing request: " + ex.getMessage()));
-            });
+            })
+            ;
     }
 
     private List<List<UserCallExternalRequestDTO>> createChunks(List<UserCallExternalRequestDTO> requestDTOs, int numberOfChunks) {
@@ -235,12 +256,13 @@ public class UserServiceImpl implements UserService {
                     .contentType(MediaType.APPLICATION_JSON)
                     .header("X-Current-User", currentUser)
                     .body(BodyInserters.fromValue(processedChunk))
-                    // .retrieve()
-                    // .onStatus(status -> status.is4xxClientError(), 
-                    //     response -> response.bodyToMono(String.class)
-                    //         .flatMap(body -> Mono.error(new RuntimeException("Bad request: " + body))))
-                    // .bodyToMono(UserCallFullResponse.class)
-                    .exchangeToMono(response -> response.bodyToMono(UserCallFullResponse.class))
+                    .exchangeToMono(response -> {
+                        if (response.statusCode().is5xxServerError()) {
+                            return response.bodyToMono(String.class)
+                                .flatMap(body -> Mono.error(new RuntimeException("Server error: " + body)));
+                        }
+                        return response.bodyToMono(UserCallFullResponse.class);
+                    })
                     .onErrorResume(WebClientResponseException.class, ex -> {
                         log.error("WebClient error: {}", ex.getMessage());
                         return Mono.error(new RuntimeException("Error processing request: " + ex.getMessage()));
