@@ -16,6 +16,6 @@ public interface UserService {
     Flux<UserCallExternalResponseDTO> createUserReactive(String currentUser, List<UserCallExternalRequestDTO> userCallExternalRequestDTO);
     Mono<List<UserCallExternalResponseDTO>> createUserReactiveAsList(String currentUser, List<UserCallExternalRequestDTO> userCallExternalRequestDTO);
     List<UserCallExternalResponseDTO> createUserAsync(String currentUser, List<UserCallExternalRequestDTO> userCallExternalRequestDTOS);
-    Flux<UserCallFullResponse> createUserReactiveNew(String currentUser, List<UserCallExternalRequestDTO> userCallExternalRequestDTOS);
+    // Flux<FullUserResponseDTO> createUserReactiveNew(String currentUser, List<UserCallExternalRequestDTO> userCallExternalRequestDTOS);
     Flux<FullUserResponseDTO> createUserReactiveTest(String currentUser, List<UserCallExternalRequestDTO> userCallExternalRequestDTOS);
 } 

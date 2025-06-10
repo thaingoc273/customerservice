@@ -139,15 +139,15 @@ public class UserController {
             .onErrorResume(e -> Mono.just(ResponseEntity.internalServerError().build()));
     }
 
-    @PostMapping("/batch/reactive/new")
-    public Flux<UserCallFullResponse> createUserReactiveNew(
-        @RequestHeader("X-Current-User") String currentUser,
-        @RequestBody(required = false) List<UserCallExternalRequestDTO> userCallExternalRequestDTO) {
-        List<UserCallExternalRequestDTO> requests = userCallExternalRequestDTO != null ? 
-            userCallExternalRequestDTO : 
-            userDataCallExternalApiGenerator.generateUsers(20);
-        return userService.createUserReactiveNew(currentUser, requests);
-    }
+    // @PostMapping("/batch/reactive/new")
+    // public Flux<UserCallFullResponse> createUserReactiveNew(
+    //     @RequestHeader("X-Current-User") String currentUser,
+    //     @RequestBody(required = false) List<UserCallExternalRequestDTO> userCallExternalRequestDTO) {
+    //     List<UserCallExternalRequestDTO> requests = userCallExternalRequestDTO != null ? 
+    //         userCallExternalRequestDTO : 
+    //         userDataCallExternalApiGenerator.generateUsers(20);
+    //     return userService.createUserReactiveNew(currentUser, requests);
+    // }
 
     @PostMapping("/batch/reactive/test")
     public Flux<FullUserResponseDTO> createUserReactiveTest(
