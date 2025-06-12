@@ -4,6 +4,7 @@ import com.ecommerce.Customer.dto.UserCallExternalResponseDTO;
 import com.ecommerce.Customer.dto.FullUserResponseDTO;
 import com.ecommerce.Customer.dto.UserCallExternalRequestDTO;
 import com.ecommerce.Customer.dto.UserDTO;
+import com.ecommerce.Customer.dto.UserResponseFullBatchSuccessErrorDto;
 import com.ecommerce.Customer.dto.UserCallFullResponse;
 import com.ecommerce.Customer.service.UserService;
 import com.ecommerce.Customer.util.UserDataCallExternalApiGenerator;
@@ -157,5 +158,15 @@ public class UserController {
             userCallExternalRequestDTO : 
             userDataCallExternalApiGenerator.generateUsers(20);
         return userService.createUserReactiveTest(currentUser, requests);
+    }
+
+    @PostMapping("/batch/reactive/test/success_error")
+    public Flux<UserResponseFullBatchSuccessErrorDto> createUserReactiveTestSuccessError(
+            @RequestHeader("X-Current-User") String currentUser,
+            @RequestBody(required = false) List<UserCallExternalRequestDTO> userCallExternalRequestDTO) {
+        List<UserCallExternalRequestDTO> requests = userCallExternalRequestDTO != null ? 
+            userCallExternalRequestDTO : 
+            userDataCallExternalApiGenerator.generateUsers(20);
+        return userService.createUserReactiveTestSuccessError(currentUser, requests);
     }
 } 

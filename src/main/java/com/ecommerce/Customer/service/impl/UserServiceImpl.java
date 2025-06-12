@@ -5,6 +5,8 @@ import com.ecommerce.Customer.dto.UserCallExternalRequestDTO;
 import com.ecommerce.Customer.dto.UserCallExternalResponseDTO;
 import com.ecommerce.Customer.dto.UserCallFullResponse;
 import com.ecommerce.Customer.dto.UserDTO;
+import com.ecommerce.Customer.dto.UserResponseBatchSuccessErrorDto;
+import com.ecommerce.Customer.dto.UserResponseFullBatchSuccessErrorDto;
 import com.ecommerce.Customer.mapper.UserMapper;
 import com.ecommerce.Customer.repository.UserRepository;
 import com.ecommerce.Customer.service.UserService;
@@ -56,9 +58,9 @@ public class UserServiceImpl implements UserService {
     private final WebClient.Builder webClientBuilder;
     private final ExecutorService executorService = Executors.newFixedThreadPool(5);
     private final Scheduler parallelScheduler = Schedulers.newParallel("user-save-scheduler", 5);
-    private String baseUrl;
-    private String uri;
-    private String currentUserLogin;
+    private final String baseUrl = "http://localhost:8082";
+    private final String uri_batch_success_error = "/api/users/batch_success_error";
+    private final String uri_batch_async = "/api/users/batch_async";
 
     @Override
     @Transactional(readOnly = true)
@@ -145,9 +147,8 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public Flux<FullUserResponseDTO> createUserReactiveTest(String currentUser, List<UserCallExternalRequestDTO> userCallExternalRequestDTOS) {
-        currentUserLogin = currentUser;
-        baseUrl = "http://localhost:8082";
-        uri = "/api/users/batch_async";
+        String baseUrl = "http://localhost:8082";
+        String uri = "/api/users/batch_async";
 
         // Create the web client
         WebClient webClient = createWebClient(baseUrl);
@@ -155,16 +156,6 @@ public class UserServiceImpl implements UserService {
         // Create the chunks for the request
         List<List<UserCallExternalRequestDTO>> chunks = createChunks(userCallExternalRequestDTOS, 5);
 
-        // return Flux.fromIterable(chunks)
-        //     .flatMap(chunk -> Mono.<FullUserResponseDTO>defer(() -> sendChunkToServer(chunk, webClient))
-        //     .publishOn(Schedulers.parallel()))
-        //     .onErrorResume(WebClientResponseException.class, ex -> {
-        //         log.error("WebClient error: {}", ex.getMessage());
-        //         return Flux.error(new RuntimeException("Error processing request: " + ex.getMessage()));
-        //     });
-        
-        
-        // Check if the current user has permission to create users
         return checkPermission(currentUser)
             .flatMapMany(permission -> {
                 if (!permission) {
@@ -176,7 +167,7 @@ public class UserServiceImpl implements UserService {
                 }
 
                 return Flux.fromIterable(chunks)
-                    .flatMap(chunk -> Mono.<FullUserResponseDTO>defer(() -> sendChunkToServer(chunk, webClient))
+                    .flatMap(chunk -> Mono.<FullUserResponseDTO>defer(() -> sendChunkToServer(chunk, webClient, currentUser))
                     .subscribeOn(parallelScheduler));
                     // .publishOn(Schedulers.parallel()));
             })
@@ -187,33 +178,52 @@ public class UserServiceImpl implements UserService {
                     new UserCallFullResponse(0, 1, 0.0f, new ArrayList<>())
                 ));
             });
-        
+ 
 
-        // return checkPermission(currentUser)
-        //     .flatMapMany(hasPermission -> {
-        //         if (!hasPermission) {
-        //             return Flux.error(new RuntimeException("User does not have permission to create users"));
-        //         }
-                
-        //         return Flux.fromIterable(chunks)
-        //             .flatMap(chunk -> Mono.<FullUserResponseDTO>defer(() -> sendChunkToServer(chunk, webClient))
-        //             .publishOn(Schedulers.parallel()));
-        //     })
-        //     .onErrorResume(WebClientResponseException.class, ex -> {
-        //         log.error("WebClient error: {}", ex.getMessage());
-        //         return Flux.error(new RuntimeException("Error processing request: " + ex.getMessage()));
-        //     });
+    }
+
+    @Override
+    @Transactional
+    public Flux<UserResponseFullBatchSuccessErrorDto> createUserReactiveTestSuccessError(String currentUser, List<UserCallExternalRequestDTO> userCallExternalRequestDTOS) {
+
+        // Create the web client
+        WebClient webClient = createWebClient(baseUrl);
+
+        // Create the chunks for the request
+        List<List<UserCallExternalRequestDTO>> chunks = createChunks(userCallExternalRequestDTOS, 5);
+
+        return checkPermission(currentUser)
+            .flatMapMany(permission -> {
+                if (!permission) {
+                    log.error("User does not have permission to create users");
+                    return Flux.just(new UserResponseFullBatchSuccessErrorDto(
+                        HttpStatus.FORBIDDEN,
+                        new UserResponseBatchSuccessErrorDto(0, 0, 0.0f, new ArrayList<>(), new ArrayList<>())
+                    ));
+                }
+
+                return Flux.fromIterable(chunks)
+                    .flatMap(chunk -> Mono.<UserResponseFullBatchSuccessErrorDto>defer(() -> sendChunkToServerSuccessError(chunk, webClient, uri_batch_success_error, currentUser))
+                    .subscribeOn(parallelScheduler));
+                    // .publishOn(Schedulers.parallel()));
+            })
+            .onErrorResume(WebClientResponseException.class, ex -> {
+                log.error("WebClient error: {}", ex.getMessage());
+                return Flux.just(new UserResponseFullBatchSuccessErrorDto(
+                    HttpStatus.valueOf(ex.getStatusCode().value()),
+                    new UserResponseBatchSuccessErrorDto(0, 0, 0.0f, new ArrayList<>(), new ArrayList<>())
+                ));
+            });
     }
 
     private Mono<Boolean> checkPermission(String currentUser) {
-        currentUserLogin = currentUser;
-        baseUrl = "http://localhost:8082";
-        uri = "/api/users/permission";
+        String baseUrl = "http://localhost:8082";
+        String uri = "/api/users/permission";
 
         WebClient webClient = createWebClient(baseUrl);
 
         return webClient.get()
-            .uri(uri + "/" + currentUserLogin)
+            .uri(uri + "/" + currentUser)
             .retrieve()
             .onStatus(status -> status.is5xxServerError(),
                 response -> response.bodyToMono(String.class)
@@ -226,8 +236,9 @@ public class UserServiceImpl implements UserService {
             })
             .onErrorResume(WebClientRequestException.class, ex -> {
                 log.error("Permission check error: {}", ex.getMessage());
-                return Mono.error(new RuntimeException("Permission check error: " + ex.getMessage()));
-            });
+                return Mono.just(false);
+            })
+            ;
     }
 
     private WebClient createWebClient(String baseUrl) {
@@ -255,15 +266,88 @@ public class UserServiceImpl implements UserService {
         return webClient;
     }
 
-    private Mono<FullUserResponseDTO> sendChunkToServer(List<UserCallExternalRequestDTO> chunk, WebClient webClient) {
-        uri = "/api/users/batch_async";
+    private Mono<UserResponseFullBatchSuccessErrorDto> sendChunkToServerSuccessError(List<UserCallExternalRequestDTO> chunk, WebClient webClient, String uri, String currentUser) {
         log.info("Thread [{}] - Starting to send chunk of {} users to server", 
             Thread.currentThread().getName(), chunk.size());
             
         return webClient.post()
             .uri(uri)
             .contentType(MediaType.APPLICATION_JSON)
-            .header("X-Current-User", currentUserLogin)
+            .header("X-Current-User", currentUser)
+            .body(BodyInserters.fromValue(chunk))
+            .exchangeToMono(response -> {
+                log.info("Thread [{}] - Response status code: {}", Thread.currentThread().getName(), response.statusCode());
+                
+                return response.bodyToMono(UserResponseBatchSuccessErrorDto.class)
+                    .map(body -> {
+                        log.info("Thread [{}] - Successfully processed response", Thread.currentThread().getName());
+                        return new UserResponseFullBatchSuccessErrorDto(
+                            HttpStatus.valueOf(response.statusCode().value()),
+                            body
+                        );
+                    })
+                    .onErrorResume(e -> {
+                        log.error("Error parsing response: {}", e.getMessage());
+                        return Mono.just(new UserResponseFullBatchSuccessErrorDto(
+                            HttpStatus.INTERNAL_SERVER_ERROR,
+                            new UserResponseBatchSuccessErrorDto(0, 0, 0.0f, new ArrayList<>(), new ArrayList<>())
+                        ));
+                    });
+            })
+            .timeout(Duration.ofSeconds(10))
+            .retryWhen(Retry.backoff(3, Duration.ofSeconds(2))
+                .filter(throwable -> throwable instanceof TimeoutException || 
+                    throwable instanceof AsyncRequestTimeoutException ||
+                    throwable instanceof PrematureCloseException ||
+                    (throwable instanceof WebClientResponseException && 
+                     ((WebClientResponseException) throwable).getStatusCode().is5xxServerError())))
+            .onErrorResume(ConnectException.class, ex -> {
+                log.error("Connection error: {}", ex.getMessage());
+                return Mono.just(new UserResponseFullBatchSuccessErrorDto(
+                    HttpStatus.REQUEST_TIMEOUT,
+                    new UserResponseBatchSuccessErrorDto(0, 0, 0.0f, new ArrayList<>(), new ArrayList<>())
+                ));
+            })
+            .onErrorResume(throwable -> {
+                if ((throwable instanceof TimeoutException) || 
+                    (throwable instanceof AsyncRequestTimeoutException) ||
+                    (throwable instanceof PrematureCloseException)) {
+                    log.error("Timeout or premature close error: {}", throwable.getMessage());
+                    return Mono.just(new UserResponseFullBatchSuccessErrorDto(
+                        HttpStatus.REQUEST_TIMEOUT,
+                        new UserResponseBatchSuccessErrorDto(0, 0, 0.0f, new ArrayList<>(), new ArrayList<>())
+                    ));
+                }
+                return Mono.error(throwable);
+            })
+            .onErrorResume(WebClientResponseException.class, ex -> {
+                log.error("WebClient error: {}", ex.getMessage());
+                return Mono.just(new UserResponseFullBatchSuccessErrorDto(
+                    HttpStatus.valueOf(ex.getStatusCode().value()),
+                    new UserResponseBatchSuccessErrorDto(0, 1, 0.0f, new ArrayList<>(), new ArrayList<>())
+                ));
+            })
+            .onErrorResume(Exception.class, ex -> {
+                log.error("Unexpected error: {}", ex.getMessage());
+                return Mono.just(new UserResponseFullBatchSuccessErrorDto(
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    new UserResponseBatchSuccessErrorDto(0, 0, 0.0f, new ArrayList<>(), new ArrayList<>())
+                ));
+            })
+            .doFinally(signalType -> 
+                log.info("Thread [{}] - Request completed with signal: {}", 
+                    Thread.currentThread().getName(), signalType));
+    }
+
+    private Mono<FullUserResponseDTO> sendChunkToServer(List<UserCallExternalRequestDTO> chunk, WebClient webClient, String currentUser) {
+        String uri = "/api/users/batch_async";
+        log.info("Thread [{}] - Starting to send chunk of {} users to server", 
+            Thread.currentThread().getName(), chunk.size());
+            
+        return webClient.post()
+            .uri(uri)
+            .contentType(MediaType.APPLICATION_JSON)
+            .header("X-Current-User", currentUser)
             .body(BodyInserters.fromValue(chunk))
             .exchangeToMono(response -> {
                 log.info("Thread [{}] - Response status code: {}", Thread.currentThread().getName(), response.statusCode());
@@ -349,7 +433,6 @@ public class UserServiceImpl implements UserService {
     // @Override
     // @Transactional
     // public Flux<FullUserResponseDTO> createUserReactiveNew(String currentUser, List<UserCallExternalRequestDTO> userCallExternalRequestDTOS) {
-    //     this.currentUserLogin = currentUser;
     //     List<List<UserCallExternalRequestDTO>> chunks = createChunks(userCallExternalRequestDTOS, 5);
 
     //     // Check if the current user has permission to create users
