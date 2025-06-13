@@ -9,6 +9,5 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class UserBatchErrorDto {
     private String username;
-    private String errorMessage;
-    private String httpStatus;
+    private String errorMessage;    
 }

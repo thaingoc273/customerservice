@@ -10,6 +10,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class UserResponseFullBatchSuccessErrorDto {
-    private HttpStatus status;
+    private HttpStatus httpStatus;
     private UserResponseBatchSuccessErrorDto body;
 }

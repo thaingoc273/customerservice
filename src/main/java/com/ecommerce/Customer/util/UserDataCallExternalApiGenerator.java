@@ -22,12 +22,9 @@ public class UserDataCallExternalApiGenerator {
 
     public UserCallExternalRequestDTO generateUser() {
         return UserCallExternalRequestDTO.builder()
-                // .id(UUID.randomUUID().toString())
                 .username(faker.name().username())
                 .email(faker.internet().emailAddress())
                 .password(faker.internet().password())
-                // .createdAt(LocalDateTime.now())
-                // .updatedAt(LocalDateTime.now())
                 .build();
     }
 

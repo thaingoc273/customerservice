@@ -251,11 +251,11 @@ public class UserServiceImpl implements UserService {
         
         // To configure a connection timeout
         HttpClient httpClient = HttpClient.create(provider)
-            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000)
-            .responseTimeout(Duration.ofSeconds(10))
+            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 100000)
+            .responseTimeout(Duration.ofSeconds(120))
             .doOnConnected(conn -> 
-                conn.addHandlerLast(new ReadTimeoutHandler(10))
-                    .addHandlerLast(new WriteTimeoutHandler(10)));
+                conn.addHandlerLast(new ReadTimeoutHandler(60))
+                    .addHandlerLast(new WriteTimeoutHandler(60)));
         
         // Create the web client        
         WebClient webClient = WebClient.builder()
@@ -294,13 +294,9 @@ public class UserServiceImpl implements UserService {
                         ));
                     });
             })
-            .timeout(Duration.ofSeconds(10))
-            .retryWhen(Retry.backoff(3, Duration.ofSeconds(2))
-                .filter(throwable -> throwable instanceof TimeoutException || 
-                    throwable instanceof AsyncRequestTimeoutException ||
-                    throwable instanceof PrematureCloseException ||
-                    (throwable instanceof WebClientResponseException && 
-                     ((WebClientResponseException) throwable).getStatusCode().is5xxServerError())))
+            .timeout(Duration.ofSeconds(200))
+            .retryWhen(Retry.backoff(3, Duration.ofSeconds(2)))
+            .doOnError(e -> { log.error("Error: {}", e.getMessage()); })            
             .onErrorResume(ConnectException.class, ex -> {
                 log.error("Connection error: {}", ex.getMessage());
                 return Mono.just(new UserResponseFullBatchSuccessErrorDto(
