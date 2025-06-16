@@ -237,7 +237,7 @@ public class UserServiceImpl implements UserService {
             .onErrorResume(WebClientRequestException.class, ex -> {
                 log.error("Permission check error: {}", ex.getMessage());
                 return Mono.just(false);
-            })
+            })            
             ;
     }
 

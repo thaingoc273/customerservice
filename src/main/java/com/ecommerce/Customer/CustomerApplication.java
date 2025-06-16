@@ -10,5 +10,4 @@ public class CustomerApplication {
 		SpringApplication.run(CustomerApplication.class, args);
 		System.out.println("Customer Application is running");
 	}
-
 }

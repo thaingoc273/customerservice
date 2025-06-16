@@ -118,6 +118,37 @@
 			<artifactId>spring-boot-starter-mail</artifactId>
 			<version>3.5.0</version>
 		</dependency>
+
+		<dependency>
+			<groupId>jakarta.validation</groupId>
+			<artifactId>jakarta.validation-api</artifactId>
+			<version>3.0.2</version>
+		</dependency>
+		<dependency>
+			<groupId>jakarta.annotation</groupId>
+			<artifactId>jakarta.annotation-api</artifactId>
+			<version>2.1.1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.openapitools</groupId>
+			<artifactId>jackson-databind-nullable</artifactId>
+			<version>0.2.6</version>
+		</dependency>
+		
+		<!-- For servlet API (Jakarta version for Spring Boot 3) -->
+		<dependency>
+			<groupId>jakarta.servlet</groupId>
+			<artifactId>jakarta.servlet-api</artifactId>
+			<version>6.0.0</version>
+			<scope>provided</scope>
+		</dependency>
+		
+		<!-- For OpenAPI generated code -->
+		<dependency>
+			<groupId>io.swagger.core.v3</groupId>
+			<artifactId>swagger-annotations</artifactId>
+			<version>2.2.15</version>
+		</dependency>
 	</dependencies>
 
 	<build>
@@ -126,6 +157,40 @@
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
+
+			<!-- Temporarily disabled OpenAPI generator plugin to prevent javax import issues -->
+			
+			<plugin>
+				<groupId>org.openapitools</groupId>
+				<artifactId>openapi-generator-maven-plugin</artifactId>
+				<version>7.5.0</version>
+				<executions>
+				  <execution>
+					<goals>
+						<goal>generate</goal>
+					</goals>
+					<configuration>
+						<inputSpec>src/main/resources/openapi.yaml</inputSpec>
+						<generatorName>spring</generatorName>
+						<output>target/generated-sources</output>
+						<!-- <additionalProperties>
+							<interfaceOnly>true</interfaceOnly>
+							<useJakartaEe>true</useJakartaEe>
+							<useSpringBoot3>true</useSpringBoot3>
+						</additionalProperties> -->
+						<configOptions>
+						  <useSpringBoot3>true</useSpringBoot3>
+						  <useJakartaEe>true</useJakartaEe>
+						  <interfaceOnly>true</interfaceOnly>
+						  <mainClass>com.ecommerce.Customer.CustomerApplication</mainClass>
+						  <generateSupportingFiles>false</generateSupportingFiles>
+						</configOptions>
+					</configuration>
+				  </execution>
+				</executions>				
+			</plugin>
+			
+		
 		</plugins>
 	</build>
 </project>

@@ -1,6 +1,6 @@
 package com.ecommerce.Customer.controller;
 
-import com.ecommerce.Customer.service.EmailServive;
+import com.ecommerce.Customer.service.EmailService;
 import com.ecommerce.Customer.dto.EmailRequestAttachmentDto;
 import com.ecommerce.Customer.dto.EmailRequestDto;
 import com.ecommerce.Customer.dto.EmailRequestMultipartDto;
@@ -20,7 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
 @RequestMapping("/api/email")
 public class EmailController {
     @Autowired
-    private EmailServive emailService;
+    private EmailService emailService;
     
     // public EmailController(EmailServive emailService) {
     //     this.emailService = emailService;
