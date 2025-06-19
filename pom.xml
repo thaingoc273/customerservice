@@ -76,49 +76,37 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-validation</artifactId>
 		</dependency>
-		<!-- https://mvnrepository.com/artifact/org.springdoc/springdoc-openapi-starter-webmvc-ui -->
-		<dependency>
-			<groupId>org.springdoc</groupId>
-			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-			<version>2.3.0</version>
-		</dependency>
 		<dependency>
 			<groupId>com.github.javafaker</groupId>
 			<artifactId>javafaker</artifactId>
 			<version>1.0.2</version>
 		</dependency>
-
 		<!-- https://mvnrepository.com/artifact/com.google.code.gson/gson -->
 		<dependency>
 			<groupId>com.google.code.gson</groupId>
 			<artifactId>gson</artifactId>
 			<version>2.13.1</version>
 		</dependency>
-
 		<dependency>
 			<groupId>io.projectreactor</groupId>
 			<artifactId>reactor-test</artifactId>
 			<scope>test</scope>
 		</dependency>
-
 		<dependency>
 			<groupId>org.springframework.security</groupId>
 			<artifactId>spring-security-test</artifactId>
 			<scope>test</scope>
 		</dependency>
-
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-webflux</artifactId>
 		</dependency>
-
 		<!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-mail -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-mail</artifactId>
 			<version>3.5.0</version>
 		</dependency>
-
 		<dependency>
 			<groupId>jakarta.validation</groupId>
 			<artifactId>jakarta.validation-api</artifactId>
@@ -129,12 +117,6 @@
 			<artifactId>jakarta.annotation-api</artifactId>
 			<version>2.1.1</version>
 		</dependency>
-		<dependency>
-			<groupId>org.openapitools</groupId>
-			<artifactId>jackson-databind-nullable</artifactId>
-			<version>0.2.6</version>
-		</dependency>
-		
 		<!-- For servlet API (Jakarta version for Spring Boot 3) -->
 		<dependency>
 			<groupId>jakarta.servlet</groupId>
@@ -142,12 +124,11 @@
 			<version>6.0.0</version>
 			<scope>provided</scope>
 		</dependency>
-		
-		<!-- For OpenAPI generated code -->
+		<!-- https://mvnrepository.com/artifact/org.springdoc/springdoc-openapi-starter-webmvc-ui -->
 		<dependency>
-			<groupId>io.swagger.core.v3</groupId>
-			<artifactId>swagger-annotations</artifactId>
-			<version>2.2.15</version>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+			<version>2.6.0</version>
 		</dependency>
 	</dependencies>
 
@@ -157,40 +138,6 @@
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
-
-			<!-- Temporarily disabled OpenAPI generator plugin to prevent javax import issues -->
-			
-			<plugin>
-				<groupId>org.openapitools</groupId>
-				<artifactId>openapi-generator-maven-plugin</artifactId>
-				<version>7.5.0</version>
-				<executions>
-				  <execution>
-					<goals>
-						<goal>generate</goal>
-					</goals>
-					<configuration>
-						<inputSpec>src/main/resources/openapi.yaml</inputSpec>
-						<generatorName>spring</generatorName>
-						<output>target/generated-sources</output>
-						<!-- <additionalProperties>
-							<interfaceOnly>true</interfaceOnly>
-							<useJakartaEe>true</useJakartaEe>
-							<useSpringBoot3>true</useSpringBoot3>
-						</additionalProperties> -->
-						<configOptions>
-						  <useSpringBoot3>true</useSpringBoot3>
-						  <useJakartaEe>true</useJakartaEe>
-						  <interfaceOnly>true</interfaceOnly>
-						  <mainClass>com.ecommerce.Customer.CustomerApplication</mainClass>
-						  <generateSupportingFiles>false</generateSupportingFiles>
-						</configOptions>
-					</configuration>
-				  </execution>
-				</executions>				
-			</plugin>
-			
-		
 		</plugins>
 	</build>
 </project>
