@@ -22,6 +22,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
+import org.openapitools.api.ApiApi;
+import org.openapitools.api.UsersApi;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -38,7 +40,7 @@ import java.util.List;
 @RequestMapping("/api/v1/users")
 @RequiredArgsConstructor
 @Tag(name = "User Management", description = "APIs for managing users")
-public class UserController {
+public class UserController implements ApiApi{
 
     private final UserService userService;
     // private final UserDataGenerator userDataGenerator;
@@ -148,16 +150,6 @@ public class UserController {
             .map(ResponseEntity::ok)
             .onErrorResume(e -> Mono.just(ResponseEntity.internalServerError().build()));
     }
-
-    // @PostMapping("/batch/reactive/new")
-    // public Flux<UserCallFullResponse> createUserReactiveNew(
-    //     @RequestHeader("X-Current-User") String currentUser,
-    //     @RequestBody(required = false) List<UserCallExternalRequestDTO> userCallExternalRequestDTO) {
-    //     List<UserCallExternalRequestDTO> requests = userCallExternalRequestDTO != null ? 
-    //         userCallExternalRequestDTO : 
-    //         userDataCallExternalApiGenerator.generateUsers(20);
-    //     return userService.createUserReactiveNew(currentUser, requests);
-    // }
 
     @PostMapping("/batch/reactive/test")
     public Flux<FullUserResponseDTO> createUserReactiveTest(
