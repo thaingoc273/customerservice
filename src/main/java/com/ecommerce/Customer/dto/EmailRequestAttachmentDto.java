@@ -8,9 +8,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class EmailRequestAttachmentDto {
-    private String to;
-    private String subject;
-    private String text;
-    private String attachmentName;
-    private String attachmentPath;
+  private String to;
+  private String subject;
+  private String text;
+  private String attachmentName;
+  private String attachmentPath;
 }

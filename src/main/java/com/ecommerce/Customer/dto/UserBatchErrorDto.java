@@ -8,6 +8,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class UserBatchErrorDto {
-    private String username;
-    private String errorMessage;    
+  private String username;
+  private String errorMessage;
 }

@@ -9,12 +9,12 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class UserCallFullResponse {
-    // private int batchNumber;
-    // private String statusCode;
-    // private String statusMessage;
+  // private int batchNumber;
+  // private String statusCode;
+  // private String statusMessage;
 
-    private int successCount;
-    private int failureCount;
-    private float successRate;
-    private List<UserCallExternalResponseDTO> results;
+  private int successCount;
+  private int failureCount;
+  private float successRate;
+  private List<UserCallExternalResponseDTO> results;
 }

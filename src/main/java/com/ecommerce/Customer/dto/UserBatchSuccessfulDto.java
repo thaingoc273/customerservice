@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class UserBatchSuccessfulDto {
-    private String username;
-    private String email;
-    private String password;
+  private String username;
+  private String email;
+  private String password;
 }

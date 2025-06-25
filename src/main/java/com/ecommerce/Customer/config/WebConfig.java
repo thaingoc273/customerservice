@@ -7,8 +7,8 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
 
-    @Override
-    public void configureAsyncSupport(AsyncSupportConfigurer configurer) {
-        configurer.setDefaultTimeout(10000); // 10 seconds
-    }
-} 
+  @Override
+  public void configureAsyncSupport(AsyncSupportConfigurer configurer) {
+    configurer.setDefaultTimeout(100000); // 100 seconds
+  }
+}

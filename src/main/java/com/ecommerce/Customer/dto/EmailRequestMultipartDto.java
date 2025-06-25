@@ -8,8 +8,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class EmailRequestMultipartDto {
-    private String to;
-    private String subject;
-    private String text;
-    private String attachmentName;
+  private String to;
+  private String subject;
+  private String text;
+  private String attachmentName;
 }
